@@ -1,0 +1,12 @@
+Sinatra App to Control My Tivo + TV
+
+WebPage aimed at iPhone 5 and Safari
+
+Aquos TCP Protocol:
+http://www.manualslib.com/manual/318372/Sharp-Aquos-Lc-70le632u.html?page=66#manual
+
+TiVo TCP Protocol:
+http://www.tivo.com/assets/images/abouttivo/resources/downloads/brochures/TiVo_TCP_Network_Remote_Control_Protocol.pdf
+
+ruby 1.9.3
+gems - sinatra, eventmachine, thin
