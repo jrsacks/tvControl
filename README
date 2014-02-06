@@ -10,3 +10,6 @@ http://www.tivo.com/assets/images/abouttivo/resources/downloads/brochures/TiVo_T
 
 ruby 1.9.3
 gems - sinatra, eventmachine, thin
+
+Guide:
+http://tvlistings.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&aid=zap2it

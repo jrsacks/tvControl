@@ -9,6 +9,11 @@ class Tivo < EventMachine::Connection
   def receive_data(data)
     puts "Tivo: #{data}"
   end
+
+  def unbind
+    puts "Tivo: Disconnected"
+    reconnect '192.168.2.5', 31339
+  end
 end
 
 class Tv < EventMachine::Connection
@@ -39,6 +44,11 @@ class Tv < EventMachine::Connection
     @volume += delta
     send_command("VOLM", @volume.to_s)
   end
+
+  def unbind
+    puts "TV: Disconnected"
+    reconnect '192.168.2.7', 10002
+  end
 end
 
 
@@ -54,9 +64,6 @@ EventMachine.run do
       File.read(File.join('public', 'index.html'))
     end
 
-    #VOLM15  \r
-    #POWR2   \r  0 - off, 1 - on
-    #IAVD1   \r  1 - tivo, 4 - chromecast
     get '/tv/volume/up' do
       settings.tv.change_volume 1
     end
@@ -72,6 +79,11 @@ EventMachine.run do
       settings.tv.send_command("IAVD", "1")
       settings.tivo.send_data "FORCECH #{chan}\r"
       chan
+    end
+
+    get '/tivo/:command/:val' do |command, val|
+      settings.tivo.send_data "#{command} #{val}\r"
+      val
     end
   end
 
