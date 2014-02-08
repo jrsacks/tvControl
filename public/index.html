@@ -4,6 +4,12 @@
 <link rel="stylesheet" href="css/jquery.mobile-1.4.0.min.css" />
 <script src="js/jquery-1.9.1.min.js"></script>
 <script src="js/jquery.mobile-1.4.0.min.js"></script>
+<style>
+.show {
+  font-size: 10px;
+  padding-left: 10px;
+}
+</style>
 </head>
 <body>
 <div data-role="tabs">
@@ -16,16 +22,16 @@
   </div>
   <div id="channels" class="ui-content">
     <ul data-role="listview" data-inset="true">
-      <li class="ui-btn" data-route="/tivo/ch/602">CBS</li>
-      <li class="ui-btn" data-route="/tivo/ch/605">NBC</li>
-      <li class="ui-btn" data-route="/tivo/ch/607">ABC</li>
-      <li class="ui-btn" data-route="/tivo/ch/609">WGN</li>
-      <li class="ui-btn" data-route="/tivo/ch/612">FOX</li>
-      <li class="ui-btn" data-route="/tivo/ch/681">ESPN</li>
-      <li class="ui-btn" data-route="/tivo/ch/682">ESPN2</li>
-      <li class="ui-btn" data-route="/tivo/ch/685">CSN</li>
-      <li class="ui-btn" data-route="/tivo/ch/686">BTN</li>
-      <li class="ui-btn" data-route="/tivo/ch/692">Tennis</li>
+      <li class="ui-btn" data-route="/tivo/ch/602" data-channel=602>CBS<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/605" data-channel=605>NBC<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/607" data-channel=607>ABC<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/609" data-channel=609>WGN<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/612" data-channel=612>FOX<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/681" data-channel=681>ESPN<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/682" data-channel=682>ESPN2<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/685" data-channel=685>CSN<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/686" data-channel=686>BTN<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/692" data-channel=692>TTC<span class="show"></span></li>
     </ul>
   </div>
   <div id="guide" class="ui-content">
@@ -106,6 +112,16 @@ $(document).ready(function(){
       $.get($(this).data('route'));
     }
   });
+  
+  function updateGuide(){
+    $.getJSON('/guide', function(guide){ 
+      $.each(guide, function(idx, data){ 
+        $($("[data-channel=" + data.channel + "]")[0]).find('.show').text(data.show);
+      });
+    });
+  }
+  updateGuide();
+  setInterval(updateGuide, 1000*60);
 });
 </script>
 </body>

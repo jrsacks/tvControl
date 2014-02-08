@@ -4,6 +4,10 @@
 require 'eventmachine'
 require 'sinatra'
 require 'socket'
+require 'nokogiri'
+require 'open-uri'
+require 'json'
+require 'em-http-request'
 
 class Tivo < EventMachine::Connection
   def receive_data(data)
@@ -51,6 +55,35 @@ class Tv < EventMachine::Connection
   end
 end
 
+def channel_number(row)
+  row.css('.zc-st-a').text.to_i
+end
+
+@@guide = {}
+def get_guide
+  url = 'http://tvlistings.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&aid=zap2it'
+  http = EventMachine::HttpRequest.new(url).get
+  http.callback {
+    doc = Nokogiri::HTML(http.response)
+
+    channels = doc.css('.zc-row').select do |table_row|
+      [602, 605, 607, 609, 612, 681, 682, 685, 686, 692].include? channel_number(table_row)
+    end
+
+    @@guide = channels.map do |table_row|
+      first_show = table_row.css('.zc-pg').first
+
+      splits = first_show.attr('onclick').gsub(')','').split(',')
+      start = Time.at(splits[-2].to_i / 1000).strftime("%I:%M")
+
+      title = first_show.css('.zc-pg-t').text
+      title = "Womens NCAAB" if title.match(/Women's College Basketball/)
+      title = "NCAAB" if title.match(/College Basketball/)
+      subtitle = first_show.css('.zc-pg-e').text
+      {:channel => channel_number(table_row), :show => "#{title} #{subtitle}"}
+    end
+  }
+end
 
 EventMachine.run do
   class App < Sinatra::Base
@@ -62,6 +95,10 @@ EventMachine.run do
     get '/' do
       content_type :html
       File.read(File.join('public', 'index.html'))
+    end
+    
+    get '/guide' do
+      @@guide.to_json
     end
 
     get '/tv/volume/up' do
@@ -90,4 +127,8 @@ EventMachine.run do
   App.run!
   Signal.trap("INT")  { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
+  EM::PeriodicTimer.new(60) do 
+    get_guide
+  end
+  get_guide
 end
