@@ -6,8 +6,13 @@
 <script src="js/jquery.mobile-1.4.0.min.js"></script>
 <style>
 .show {
-  font-size: 10px;
+  display: inline-block;
+  font-size: 9px;
   padding-left: 10px;
+}
+.station {
+  display: inline-block;
+  width: 50px;
 }
 </style>
 </head>
@@ -22,16 +27,16 @@
   </div>
   <div id="channels" class="ui-content">
     <ul data-role="listview" data-inset="true">
-      <li class="ui-btn" data-route="/tivo/ch/602" data-channel=602>CBS<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/605" data-channel=605>NBC<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/607" data-channel=607>ABC<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/609" data-channel=609>WGN<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/612" data-channel=612>FOX<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/681" data-channel=681>ESPN<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/682" data-channel=682>ESPN2<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/685" data-channel=685>CSN<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/686" data-channel=686>BTN<span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/692" data-channel=692>TTC<span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/602" data-channel=602><div class="station">CBS</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/605" data-channel=605><div class="station">NBC</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/607" data-channel=607><div class="station">ABC</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/609" data-channel=609><div class="station">WGN</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/612" data-channel=612><div class="station">FOX</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/681" data-channel=681><div class="station">ESPN</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/682" data-channel=682><div class="station">ESPN2</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/685" data-channel=685><div class="station">CSN</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/686" data-channel=686><div class="station">BTN</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/692" data-channel=692><div class="station">TTC</div><span class="show"></span></li>
     </ul>
   </div>
   <div id="guide" class="ui-content">
@@ -113,13 +118,30 @@ $(document).ready(function(){
     }
   });
   
+  function displayShow(show){
+    var start = new Date(parseInt(show.start, 10));
+    var hour = (start.getHours() % 12)
+    var minute = start.getMinutes();
+    if (minute === 0){
+      minute = "00";
+    }
+    return  hour + ":" + minute + " " + show.title;
+  }
+
   function updateGuide(){
     var now = new Date().getTime();
     $.getJSON('/guide', function(guide){ 
       $.each(guide, function(idx, data){ 
         $.each(data.shows, function(idx, show){
           if(show.start - now < (5 * 1000 * 60)){
-            $($("[data-channel=" + data.channel + "]")[0]).find('.show').text(show.title);
+            var showElem = $($("[data-channel=" + data.channel + "]")[0]).find('.show');
+            showElem.empty();
+            if(idx < data.shows.length - 1){
+              showElem.append($('<div>').text(displayShow(show)));
+              showElem.append($('<div>').text(displayShow(data.shows[idx + 1])));
+            } else {
+              showElem.text(show.title);
+            }
           }
         });
       });
