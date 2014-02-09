@@ -20,7 +20,7 @@ class Tivo < EventMachine::Connection
   end
 end
 
-class Tv < EventMachine::Connection
+class SharpAquos < EventMachine::Connection
   def post_init
     @volume = nil
     @timer = EM::PeriodicTimer.new(1) do
@@ -30,7 +30,7 @@ class Tv < EventMachine::Connection
   end
 
   def receive_data(data)
-    puts "Tv: #{data}"
+    puts "SharpAquos: #{data}"
     unless data.match(/ERR/) or data.match(/OK/)
       @volume = data.to_i 
       @timer.cancel
@@ -55,42 +55,54 @@ class Tv < EventMachine::Connection
   end
 end
 
-def channel_number(row)
-  row.css('.zc-st-a').text.to_i
-end
+class Guide
+  attr_reader :listings
+  URL = 'http://tvlistings.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&aid=zap2it'
 
-@@guide = {}
-def get_guide
-  url = 'http://tvlistings.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&aid=zap2it'
-  http = EventMachine::HttpRequest.new(url).get
-  http.callback {
-    doc = Nokogiri::HTML(http.response)
+  def initialize
+    @listings = {}
+    EM::PeriodicTimer.new(10*60) { update }
+    update
+  end
 
-    channels = doc.css('.zc-row').select do |table_row|
-      [602, 605, 607, 609, 612, 681, 682, 685, 686, 692].include? channel_number(table_row)
-    end
+  def update
+    http = EventMachine::HttpRequest.new(URL).get
+    http.callback {
+      doc = Nokogiri::HTML(http.response)
 
-    @@guide = channels.map do |table_row|
-      first_show = table_row.css('.zc-pg').first
+      channels = doc.css('.zc-row').select do |table_row|
+        num = channel_number(table_row)
+        num > 600 && num < 700
+      end
 
-      splits = first_show.attr('onclick').gsub(')','').split(',')
-      start = Time.at(splits[-2].to_i / 1000).strftime("%I:%M")
+      @listings = channels.map do |table_row|
+        shows = table_row.css('.zc-pg').map do |show_elem|
+          start_ms = show_elem.attr('onclick').gsub(')','').split(',')[-2]
+          title = show_elem.css('.zc-pg-t').text
+          title = "Womens NCAAB" if title.match(/Women's College Basketball/)
+          title = "NCAAB" if title.match(/College Basketball/)
+          subtitle = show_elem.css('.zc-pg-e').text
+          full_text = title + " " + subtitle
+          {:start => start_ms, :title => full_text}
+        end
+        {:channel => channel_number(table_row), :shows => shows}
+      end
+    }
+  end
 
-      title = first_show.css('.zc-pg-t').text
-      title = "Womens NCAAB" if title.match(/Women's College Basketball/)
-      title = "NCAAB" if title.match(/College Basketball/)
-      subtitle = first_show.css('.zc-pg-e').text
-      {:channel => channel_number(table_row), :show => "#{title} #{subtitle}"}
-    end
-  }
+  private
+  def channel_number(row)
+    row.css('.zc-st-a').text.to_i
+  end
 end
 
 EventMachine.run do
-  class App < Sinatra::Base
+  class TvRemoteWeb < Sinatra::Base
     set :bind, '0.0.0.0'
     set :public_folder, File.dirname(__FILE__) + '/public'
-    set :tv, EventMachine.connect('192.168.2.7', 10002, Tv)
+    set :tv, EventMachine.connect('192.168.2.7', 10002, SharpAquos)
     set :tivo, EventMachine.connect('192.168.2.5', 31339, Tivo)
+    set :guide, Guide.new
 
     get '/' do
       content_type :html
@@ -98,7 +110,7 @@ EventMachine.run do
     end
     
     get '/guide' do
-      @@guide.to_json
+      settings.guide.listings.to_json
     end
 
     get '/tv/volume/up' do
@@ -124,11 +136,7 @@ EventMachine.run do
     end
   end
 
-  App.run!
+  TvRemoteWeb.run!
   Signal.trap("INT")  { EventMachine.stop }
   Signal.trap("TERM") { EventMachine.stop }
-  EM::PeriodicTimer.new(60) do 
-    get_guide
-  end
-  get_guide
 end
