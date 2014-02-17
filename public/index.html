@@ -120,7 +120,10 @@ $(document).ready(function(){
   
   function displayShow(show){
     var start = new Date(parseInt(show.start, 10));
-    var hour = (start.getHours() % 12)
+    var hour = start.getHours();
+    if (hour > 12){
+      hour = hour % 12;
+    }
     var minute = start.getMinutes();
     if (minute === 0){
       minute = "00";
@@ -140,7 +143,7 @@ $(document).ready(function(){
               showElem.append($('<div>').text(displayShow(show)));
               showElem.append($('<div>').text(displayShow(data.shows[idx + 1])));
             } else {
-              showElem.text(show.title);
+              showElem.text(displayShow(show));
             }
           }
         });
