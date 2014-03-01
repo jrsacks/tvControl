@@ -51,7 +51,7 @@ class SharpAquos < EventMachine::Connection
 
   def unbind
     puts "TV: Disconnected"
-    reconnect '192.168.2.7', 10002
+    reconnect '192.168.2.6', 10002
   end
 end
 
