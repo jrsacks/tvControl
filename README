@@ -13,3 +13,22 @@ gems - sinatra, eventmachine, thin, em-http-request, nokogiri
 
 Guide:
 http://tvlistings.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&aid=zap2it
+
+Setup On Raspberry Pi:
+
+OS and config steps:
+https://www.linuxsystems.it/raspbian-wheezy-armhf-raspberry-pi-minimal-image/
+
+Increase Disk Size:
+http://simonthepiman.com/how_to_increase_my_primary_disk_size.php
+
+apt-get update
+apt-get -y install git build-essential ruby1.9.3 ruby-dev
+
+iptables -A PREROUTING -t nat -i eth0 -p tcp --dport 80 -j REDIRECT --to-port 4567
+
+echo "remote" > /etc/hostname
+/etc/init.d/hostname.sh start
+/etc/init.d/networking restart
+
+gem install sinatra em-http-request thin nokogiri
