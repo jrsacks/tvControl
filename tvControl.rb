@@ -4,9 +4,9 @@
 require 'eventmachine'
 require 'sinatra'
 require 'socket'
-require 'nokogiri'
 require 'open-uri'
 require 'json'
+require 'date'
 require 'em-http-request'
 
 class Tivo < EventMachine::Connection
@@ -57,8 +57,6 @@ end
 
 class Guide
   attr_reader :listings
-  URL = 'http://tvlistings.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&aid=zap2it'
-
   def initialize
     @listings = {}
     EM::PeriodicTimer.new(10*60) { update }
@@ -66,33 +64,32 @@ class Guide
   end
 
   def update
-    http = EventMachine::HttpRequest.new(URL).get
+    nearest_half_hour = Time.at((Time.now.to_f / (60 * 30)).to_i * 60* 30).to_i
+    http = EventMachine::HttpRequest.new("http://tvlistings.zap2it.com/tvgrid/_xhr/schedule?time=#{nearest_half_hour}&lineupid=USA-IL63451-X&offset=250&count=200&zip=60654&tz=US%2FCentral").get
     http.callback {
-      doc = Nokogiri::HTML(http.response)
+      begin
+        data = JSON.parse(http.response)
 
-      channels = doc.css('.zc-row').select do |table_row|
-        num = channel_number(table_row)
-        num > 600 && num < 700
-      end
-
-      @listings = channels.map do |table_row|
-        shows = table_row.css('.zc-pg').map do |show_elem|
-          start_ms = show_elem.attr('onclick').gsub(')','').split(',')[-2]
-          title = show_elem.css('.zc-pg-t').text
-          title = "Womens NCAAB" if title.match(/Women's College Basketball/)
-          title = "NCAAB" if title.match(/College Basketball/)
-          subtitle = show_elem.css('.zc-pg-e').text
-          full_text = title + " " + subtitle
-          {:start => start_ms, :title => full_text}
+        @listings = data["data"]["results"]["stations"].map do |channel|
+          shows = (channel["events"] || []).map do |event|
+            program = event["program"]
+            title = program["title"] + ": " + program["episodeTitle"]
+            start = DateTime.parse(event["startTime"]).to_time.to_f * 1000
+            {:start => start.to_i, :title => title }
+          end
+          {:channel => channel["channelNo"], :shows => shows}
         end
-        {:channel => channel_number(table_row), :shows => shows}
+      rescue => e
+        puts "Failed to get Guide"
       end
     }
   end
 
   private
   def channel_number(row)
-    row.css('.zc-st-a').text.to_i
+    return 0 unless row.css('.tvg-station-channel').text.match(/Ch (\d+)/)
+    puts row.css('.tvg-station-channel').text.match(/Ch (\d+)/)[1].to_i
+    row.css('.tvg-station-channel').text.match(/Ch (\d+)/)[1].to_i
   end
 end
 
@@ -100,8 +97,8 @@ EventMachine.run do
   class TvRemoteWeb < Sinatra::Base
     set :bind, '0.0.0.0'
     set :public_folder, File.dirname(__FILE__) + '/public'
-    set :tv, EventMachine.connect('192.168.2.7', 10002, SharpAquos)
-    set :tivo, EventMachine.connect('192.168.2.5', 31339, Tivo)
+    #set :tv, EventMachine.connect('192.168.2.7', 10002, SharpAquos)
+    #set :tivo, EventMachine.connect('192.168.2.5', 31339, Tivo)
     set :guide, Guide.new
 
     get '/' do
