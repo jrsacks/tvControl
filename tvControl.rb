@@ -51,7 +51,7 @@ class SharpAquos < EventMachine::Connection
 
   def unbind
     puts "TV: Disconnected"
-    reconnect '192.168.2.7', 10002
+    reconnect '192.168.2.6', 10002
   end
 end
 
@@ -97,7 +97,7 @@ EventMachine.run do
   class TvRemoteWeb < Sinatra::Base
     set :bind, '0.0.0.0'
     set :public_folder, File.dirname(__FILE__) + '/public'
-    set :tv, EventMachine.connect('192.168.2.7', 10002, SharpAquos)
+    set :tv, EventMachine.connect('192.168.2.6', 10002, SharpAquos)
     set :tivo, EventMachine.connect('192.168.2.5', 31339, Tivo)
     set :guide, Guide.new
 
