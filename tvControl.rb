@@ -131,6 +131,10 @@ EventMachine.run do
       settings.tivo.send_data "#{command} #{val}\r"
       val
     end
+    
+    get 'shutdown' do
+      system "shutdown -h now"
+    end
   end
 
   TvRemoteWeb.run!
