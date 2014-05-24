@@ -65,7 +65,7 @@ class Guide
 
   def update
     nearest_half_hour = Time.at((Time.now.to_f / (60 * 30)).to_i * 60* 30).to_i
-    http = EventMachine::HttpRequest.new("http://tvlistings.zap2it.com/tvgrid/_xhr/schedule?time=#{nearest_half_hour}&lineupid=USA-IL63451-X&offset=250&count=200&zip=60654&tz=US%2FCentral").get
+    http = EventMachine::HttpRequest.new("http://www.zap2it.com/tvgrid/_xhr/schedule?time=#{nearest_half_hour}&lineupid=USA-IL63451-X&offset=250&count=200&zip=60654&tz=US%2FCentral").get
     http.callback {
       begin
         data = JSON.parse(http.response)
