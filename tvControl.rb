@@ -16,7 +16,7 @@ class Tivo < EventMachine::Connection
 
   def unbind
     puts "Tivo: Disconnected"
-    reconnect '192.168.2.5', 31339
+    reconnect '192.168.1.7', 31339
   end
 end
 
@@ -51,7 +51,7 @@ class SharpAquos < EventMachine::Connection
 
   def unbind
     puts "TV: Disconnected"
-    reconnect '192.168.2.6', 10002
+    reconnect '192.168.1.3', 10002
   end
 end
 
