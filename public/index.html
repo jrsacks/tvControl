@@ -7,12 +7,21 @@
 <style>
 .show {
   display: inline-block;
-  font-size: 9px;
+  font-size: 10px;
   padding-left: 10px;
 }
 .station {
   display: inline-block;
   width: 50px;
+}
+#moreChannels, #channels {
+  padding: 0;
+}
+#moreChannels li, #channels li{
+  line-height: 1.1;
+}
+.vol, #channels ul {
+  margin-bottom: 0;
 }
 </style>
 </head>
@@ -37,14 +46,18 @@
       <li class="ui-btn" data-route="/tivo/ch/682" data-channel=682><div class="station">ESPN2</div><span class="show"></span></li>
       <li class="ui-btn" data-route="/tivo/ch/685" data-channel=685><div class="station">CSN</div><span class="show"></span></li>
       <li class="ui-btn" data-route="/tivo/ch/686" data-channel=686><div class="station">BTN</div><span class="show"></span></li>
-      <li class="ui-btn" data-route="/tivo/ch/692" data-channel=692><div class="station">TTC</div><span class="show"></span></li>
     </ul>
   </div>
   <div id="moreChannels" class="ui-content">
     <ul data-role="listview" data-inset="true">
+      <li class="ui-btn" data-route="/tivo/ch/621" data-channel=621><div class="station">BRAV</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/637" data-channel=637><div class="station">E</div><span class="show"></span></li>
       <li class="ui-btn" data-route="/tivo/ch/622" data-channel=622><div class="station">TBS</div><span class="show"></span></li>
       <li class="ui-btn" data-route="/tivo/ch/623" data-channel=623><div class="station">TNT</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/624" data-channel=624><div class="station">USA</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/650" data-channel=650><div class="station">CNN</div><span class="show"></span></li>
       <li class="ui-btn" data-route="/tivo/ch/660" data-channel=660><div class="station">TRAV</div><span class="show"></span></li>
+      <li class="ui-btn" data-route="/tivo/ch/689" data-channel=689><div class="station">FS1</div><span class="show"></span></li>
     </ul>
   </div>
   <div id="guide" class="ui-content">
@@ -105,17 +118,17 @@
   </div>
 </div>
 <div class="ui-grid-b">
-  <div class="ui-block-a"><a href="#" class="ui-btn ui-shadow ui-corner-all" data-route="/tv/volume/down">Vol -</a></div>
-  <div class="ui-block-b"></div>
-  <div class="ui-block-c"><a href="#" class="ui-btn ui-shadow ui-corner-all" data-route="/tv/volume/up">Vol +</a></div>
+  <div class="ui-block-a"><a href="#" class="vol ui-btn ui-shadow ui-corner-all" data-route="/tv/volume/down">Vol -</a></div>
+  <div class="ui-block-b"><a href="#" class="ui-btn ui-shadow ui-corner-all" data-route="/tv/power/off">TV Off</a></div>
+  <div class="ui-block-c"><a href="#" class="vol ui-btn ui-shadow ui-corner-all" data-route="/tv/volume/up">Vol +</a></div>
 </div>
 <div class="ui-grid-b">
   <div class="ui-block-a"></div>
-  <div class="ui-block-b"><a href="#" class="ui-btn ui-shadow ui-corner-all" data-route="/tv/power/off">TV Off</a></div>
   <div class="ui-block-c"></div>
 </div>
 <script type="text/javascript">
 $(document).ready(function(){
+  setTimeout(function(){ window.scrollTo(0,1);}, 1); //get rid of address bar0
   $('#number').change(function(){
     $.get("/tivo/ch/" + $(this).val());
     $(this).val('');
