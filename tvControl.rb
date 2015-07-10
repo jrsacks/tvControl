@@ -4,6 +4,7 @@
 require 'eventmachine'
 require 'sinatra'
 require 'socket'
+require 'nokogiri'
 require 'open-uri'
 require 'json'
 require 'date'
@@ -57,6 +58,8 @@ end
 
 class Guide
   attr_reader :listings
+  URL = 'http://tvschedule.zap2it.com/tvlistings/ZCGrid.do?method=decideFwdForLineup&zipcode=60654&setMyPreference=false&lineupId=IL63451:X&fromTimeInMillis='
+
   def initialize
     @listings = {}
     EM::PeriodicTimer.new(10*60) { update }
@@ -64,32 +67,33 @@ class Guide
   end
 
   def update
-    nearest_half_hour = Time.at((Time.now.to_f / (60 * 30)).to_i * 60* 30).to_i
-    http = EventMachine::HttpRequest.new("http://www.zap2it.com/tvgrid/_xhr/schedule?time=#{nearest_half_hour}&lineupid=USA-IL63451-X&offset=250&count=200&zip=60654&tz=US%2FCentral").get
+    http = EventMachine::HttpRequest.new(URL + (Time.now.to_f*1000).to_i.to_s).get
     http.callback {
-      begin
-        data = JSON.parse(http.response)
+      doc = Nokogiri::HTML(http.response)
 
-        @listings = data["data"]["results"]["stations"].map do |channel|
-          shows = (channel["events"] || []).map do |event|
-            program = event["program"]
-            title = program["title"] + ": " + program["episodeTitle"]
-            start = DateTime.parse(event["startTime"]).to_time.to_f * 1000
-            {:start => start.to_i, :title => title }
-          end
-          {:channel => channel["channelNo"], :shows => shows}
+      channels = doc.css('.zc-row').select do |table_row|
+        num = channel_number(table_row)
+        num > 600 && num < 700
+      end
+
+      @listings = channels.map do |table_row|
+        shows = table_row.css('.zc-pg').map do |show_elem|
+          start_ms = show_elem.attr('onclick').gsub(')','').split(',')[-2]
+          title = show_elem.css('.zc-pg-t').text
+          title = "Womens NCAAB" if title.match(/Women's College Basketball/)
+          title = "NCAAB" if title.match(/College Basketball/)
+          subtitle = show_elem.css('.zc-pg-e').text
+          full_text = title + " " + subtitle
+          {:start => start_ms, :title => full_text}
         end
-      rescue => e
-        puts "Failed to get Guide"
+        {:channel => channel_number(table_row), :shows => shows}
       end
     }
   end
 
   private
   def channel_number(row)
-    return 0 unless row.css('.tvg-station-channel').text.match(/Ch (\d+)/)
-    puts row.css('.tvg-station-channel').text.match(/Ch (\d+)/)[1].to_i
-    row.css('.tvg-station-channel').text.match(/Ch (\d+)/)[1].to_i
+    row.css('.zc-st-a').text.to_i
   end
 end
 
