@@ -136,7 +136,7 @@ EventMachine.run do
       val
     end
     
-    get 'shutdown' do
+    get '/shutdown' do
       system "shutdown -h now"
     end
   end
