@@ -130,7 +130,7 @@ EventMachine.run do
       settings.tv.change_volume -1
     end
     get '/tv/volume/:vol' do |vol|
-      settings.tv.set_volume vol
+      settings.tv.set_volume vol.to_i
     end
     get '/tv/mute' do
       settings.tv.send_command("MUTE","1")
