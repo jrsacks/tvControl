@@ -28,6 +28,10 @@ class SharpAquos < EventMachine::Connection
       puts "asking for volume"
       send_data "VOLM?   \r" if @volume.nil?
     end
+    EM::Timer.new(5) do
+      @volume = 15 if @volume.nil?
+      @timer.cancel
+    end
   end
 
   def receive_data(data)
@@ -48,6 +52,11 @@ class SharpAquos < EventMachine::Connection
   def change_volume(delta)
     @volume += delta
     send_command("VOLM", @volume.to_s)
+  end
+
+  def set_volume(volume)
+    @volume = volume
+    change_volume(0)
   end
 
   def unbind
@@ -119,6 +128,15 @@ EventMachine.run do
     end
     get '/tv/volume/down' do
       settings.tv.change_volume -1
+    end
+    get '/tv/volume/:vol' do |vol|
+      settings.tv.set_volume vol
+    end
+    get '/tv/mute' do
+      settings.tv.send_command("MUTE","1")
+    end
+    get '/tv/unmute' do
+      settings.tv.send_command("MUTE","2")
     end
     get '/tv/power/off' do 
       settings.tv.send_command("POWR", "0")
