@@ -153,6 +153,14 @@ EventMachine.run do
       settings.tivo.send_data "#{command} #{val}\r"
       val
     end
+
+    get '/fastForward/:min' do |min|
+      mins = 2 * min.to_i
+      mins.times do
+        settings.tivo.send_data "IRCODE ADVANCE\r"
+      end
+      min
+    end
     
     get '/shutdown' do
       system "shutdown -h now"
