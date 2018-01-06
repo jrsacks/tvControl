@@ -141,7 +141,7 @@ $(document).ready(function(){
   });
   
   function displayShow(show){
-    var start = new Date(parseInt(show.start, 10));
+    var start = new Date(show.start);
     var hour = start.getHours();
     if (hour > 12){
       hour = hour % 12;

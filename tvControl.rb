@@ -66,7 +66,7 @@ end
 
 class Guide
   attr_reader :listings
-  URL = "https://tvschedule.zap2it.com/api/grid?lineupId=USA-IL63451-DEFAULT&timespan=3&headendId=IL63451&country=USA&device=X&postalCode=60654&isOverride=true&pref=h&userId=-&aid=gapzap&time="
+  URL = "http://tvschedule.zap2it.com/api/grid?lineupId=USA-IL63451-DEFAULT&timespan=3&headendId=IL63451&country=USA&device=X&postalCode=60654&isOverride=true&pref=h&userId=-&aid=gapzap&time="
 
   def initialize
     @listings = {}
@@ -86,13 +86,12 @@ class Guide
 
       @listings = channels.map do |channel|
         shows = channel["events"].map do |event|
-          start_ms = DateTime.parse(event["startTime"]).strftime("%Q")
           title = event["program"]["title"]
           title = "Womens NCAAB" if title.match(/Women's College Basketball/)
           title = "NCAAB" if title.match(/College Basketball/)
           subtitle = event["program"]["episodeTitle"] || ""
           full_text = title + " " + subtitle
-          {:start => start_ms, :title => full_text}
+          {:start => event["startTime"], :title => full_text}
         end
         {:channel => channel["channelNo"].to_i, :shows => shows}
       end
